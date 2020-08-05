@@ -1,39 +1,49 @@
+let results = []; // API data will be stored here
 
-$(function() {
-  var params = {
-    // Request parameters
-  };
+// not a complete list I guess; just add the missing ones here
+const regions = ["Carlow", "Clare", "Cork", "Limerick", "Waterford", "Wexford"];
 
-  $.ajax({
-    url:
-      "https://failteireland.azure-api.net/opendata-api/v1/attractions?" +
-      $.param(params),
-    beforeSend: function (xhrObj) {
+const $selRegion = $("#region");
+$.each(regions, function(i, region) {
+  $selRegion.append($('<option>').text(region));
+});
+$selRegion.on("change", function() {
+  showAttractions($(this).val());
+});
+
+$.ajax({
+    url: "https://failteireland.azure-api.net/opendata-api/v1/attractions?",
+    beforeSend: function(xhrObj) {
       // Request headers
       xhrObj.setRequestHeader(
         "Ocp-Apim-Subscription-Key",
         "ef4ed92186214c868a59d97c3b353661"
       );
-    },
-    type: "GET",
-    // Request body
-    data: "{body}",
+    }
   })
-    .done(function (data) {
-    
-      console.log(data);
-      
-      document.getElementById("data").innerHTML = data.results;
-    })
-    .fail(function () {
-      alert("error");
+  .done(function(data) {
+    results = data.results;
+    $('#data').empty();
+  })
+  .fail(function() {
+    alert("error");
+  });
+
+function showAttractions(region) {
+  $data = $('#data').empty();
+  $(results.filter(result => result.address.addressRegion === region))
+    .each(function(i, r) {
+      $data.append(createCard(r))
     });
 
+}
 
-
-});
-
-console.log(data);
-
-
-
+function createCard(a) {
+  $div = $('<div>').addClass("card");
+  $div.append($("<p>").text(a.name));
+  $div.append($("<p>").text(a.address.addressRegion));
+  $div.append($("<a>").text("Show on map")
+    .attr("target", "_blank")
+    .attr("href", `https://www.google.com/maps/@${a.geo.latitude},${a.geo.longitude},15z`));
+  return $div;
+}
